@@ -1,7 +1,3 @@
-// ----------------------------
-// app.js — Clean, Working Version
-// ----------------------------
-
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -56,6 +52,9 @@ const driverRoutes = require("./routes/driver/driverRoutes");
 const rideRoutes = require("./routes/shared/rideRoutes");
 const groceryRoutes = require("./routes/shared/groceryRoutes");
 const routeRoutes = require("./routes/shared/routeRoutes");
+
+const ridePriceRoutes = require("./routes/admin/ridePriceRoutes");
+app.use("/api/admin", ridePriceRoutes);
 
 // Optional routes
 const dashboardRoutes = safeRequire("./routes/dashboardRoutes");
@@ -117,32 +116,18 @@ function safeRequire(path) {
 
 module.exports = app;
 
-
 // // ----------------------------
-// // app.js — Clean, Merged, Working Version
+// // app.js — Clean, Working Version
 // // ----------------------------
 
 // const express = require("express");
-// const mongoose = require("mongoose");
 // const cors = require("cors");
 // const path = require("path");
-// const http = require("http");
-// const socketIo = require("socket.io");
 // const fs = require("fs");
 // const multer = require("multer");
 // require("dotenv").config();
 
-// // ----------------------------
-// // Initialize App and Server
-// // ----------------------------
 // const app = express();
-// const server = http.createServer(app);
-// const io = socketIo(server, {
-//   cors: {
-//     origin: "*",
-//     methods: ["GET", "POST", "PUT", "DELETE"],
-//   },
-// });
 
 // // ----------------------------
 // // Ensure uploads folder exists
@@ -181,25 +166,8 @@ module.exports = app;
 // app.set("upload", upload);
 
 // // ----------------------------
-// // MongoDB Connection
+// // Routes
 // // ----------------------------
-// mongoose
-//   .connect(process.env.MONGODB_URI || "mongodb://localhost:27017/eazybac", {
-//     useNewUrlParser: true,
-//     useUnifiedTopology: true,
-//   })
-//   .then(() => console.log("✅ MongoDB connected"))
-//   .catch((err) => console.error("❌ MongoDB connection error:", err));
-
-// // ----------------------------
-// // Attach Socket.io to Requests
-// // ----------------------------
-// app.use((req, res, next) => {
-//   req.io = io;
-//   next();
-// });
-
-
 // const adminRoutes = require("./routes/admin/adminRoutes");
 // const userRoutes = require("./routes/user/userRoutes");
 // const driverRoutes = require("./routes/driver/driverRoutes");
@@ -207,7 +175,19 @@ module.exports = app;
 // const groceryRoutes = require("./routes/shared/groceryRoutes");
 // const routeRoutes = require("./routes/shared/routeRoutes");
 
-// // Optional additional routes (if exist)
+
+// const ridePriceRoutes = require("./routes/admin/ridePriceRoutes");
+// app.use("/api/admin", ridePriceRoutes);
+
+
+
+// const { initializePrices } = require("./controllers/admin/ridePriceController");
+// initializePrices().then(() => {
+//   console.log("🚗 Ride price system initialized");
+// });
+
+
+// // Optional routes
 // const dashboardRoutes = safeRequire("./routes/dashboardRoutes");
 // const shopRoutes = safeRequire("./routes/shopRoutes");
 // const rewardRoutes = safeRequire("./routes/rewardRoutes");
@@ -218,22 +198,7 @@ module.exports = app;
 // const driverLocationHistoryRoutes = safeRequire("./routes/driverLocationHistoryRoutes");
 // const authRoutes = safeRequire("./routes/authRoutes");
 
-// // ----------------------------
-// // Mount Routes
-
-
-// console.log("🔍 Checking route types...");
-// console.log({
-//   adminRoutes: typeof adminRoutes,
-//   userRoutes: typeof userRoutes,
-//   driverRoutes: typeof driverRoutes,
-//   rideRoutes: typeof rideRoutes,
-//   groceryRoutes: typeof groceryRoutes,
-//   routeRoutes: typeof routeRoutes,
-// });
-
-
-// // ----------------------------
+// // Mount main routes
 // app.use("/api/admin", adminRoutes);
 // app.use("/api/user", userRoutes);
 // app.use("/api/driver", driverRoutes);
@@ -241,15 +206,7 @@ module.exports = app;
 // app.use("/api/groceries", groceryRoutes);
 // app.use("/api/routes", routeRoutes);
 
-// app.use("/api/admin", adminRoutes);
-// app.use("/api/user", userRoutes);
-// app.use("/api/driver", driverRoutes);
-// app.use("/api/rides", rideRoutes);
-// app.use("/api/groceries", groceryRoutes);
-// app.use("/api/routes", routeRoutes);
-
-
-// // Optional route mounts (if those files exist)
+// // Mount optional routes if exist
 // if (dashboardRoutes) app.use("/api/dashboard", dashboardRoutes);
 // if (shopRoutes) app.use("/api/shop", shopRoutes);
 // if (rewardRoutes) app.use("/api/rewards", rewardRoutes);
@@ -260,12 +217,6 @@ module.exports = app;
 // if (driverLocationHistoryRoutes)
 //   app.use("/api/driver-location-history", driverLocationHistoryRoutes);
 // if (authRoutes) app.use("/api/auth", authRoutes);
-
-// // ----------------------------
-// // Socket.io Setup
-// // ----------------------------
-// const { init } = require("./socket");
-// init(server); // Pass the server instance, not io
 
 // // ----------------------------
 // // Test Route
@@ -283,15 +234,7 @@ module.exports = app;
 // });
 
 // // ----------------------------
-// // Start Server
-// // ----------------------------
-// const PORT = process.env.PORT || 5000;
-// server.listen(PORT, () => {
-//   console.log(`🚀 Server running on port ${PORT}`);
-// });
-
-// // ----------------------------
-// // Utility: Safe Require (to skip missing optional routes)
+// // Utility: Safe Require
 // // ----------------------------
 // function safeRequire(path) {
 //   try {
@@ -303,3 +246,4 @@ module.exports = app;
 // }
 
 // module.exports = app;
+

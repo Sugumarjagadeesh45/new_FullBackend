@@ -4,6 +4,8 @@ const Ride = require("../../models/shared/ride");
 const RaidId = require("../../models/user/raidId");
 const jwt = require("jsonwebtoken");
 
+const { calculateRidePrice } = require("../admin/ridePriceController");
+
 // Auth middleware
 exports.userAuth = (req, res, next) => {
   console.log('🔐 Running userAuth middleware');
@@ -38,6 +40,14 @@ exports.createRideFromSocket = async (io, rideData) => {
       return { success: false, message: `Missing required fields: ${missingFields.join(', ')}` };
     }
 
+    // Calculate distance in km (extract from rideData or calculate)
+    const distanceInKm = rideData.distance ? parseFloat(rideData.distance) : 0;
+    
+    // Calculate price using dynamic pricing
+    const calculatedPrice = await calculateRidePrice(rideData.vehicleType, distanceInKm);
+    
+    console.log(`💰 Calculated price: ₹${calculatedPrice} for ${distanceInKm}km ${rideData.vehicleType}`);
+
     // Generate sequential RAID_ID
     const raidId = await generateSequentialRaidId();
     
@@ -62,7 +72,7 @@ exports.createRideFromSocket = async (io, rideData) => {
       dropoffLocation: rideData.drop.address || 'Selected Location',
       pickupCoordinates: pickupCoordinates,
       dropoffCoordinates: dropoffCoordinates,
-      fare: rideData.price || 0,
+      fare: calculatedPrice, // Use dynamically calculated price
       rideType: rideData.vehicleType,
       otp: rideData.otp || rideData.customerId.slice(-4),
       distance: rideData.distance || '0 km',
@@ -86,6 +96,7 @@ exports.createRideFromSocket = async (io, rideData) => {
     console.log(`👤 Customer Name: ${rideData.userName}`);
     console.log(`🆔 Customer ID: ${rideData.customerId}`);
     console.log(`🆔 Generated RAID_ID: ${raidId}`);
+    console.log(`💰 Calculated Fare: ₹${calculatedPrice}`);
     console.log("=====================================\n");
 
     // Return success with ride data
@@ -94,6 +105,7 @@ exports.createRideFromSocket = async (io, rideData) => {
       ride: ride,
       raidId: raidId,
       otp: rideDataForDB.otp,
+      price: calculatedPrice,
       message: "Ride booked successfully!"
     };
 
@@ -105,6 +117,56 @@ exports.createRideFromSocket = async (io, rideData) => {
     };
   }
 };
+
+
+
+// Add this at the top of rideController.js
+console.log('🔍 Ride Controller Routes Loaded:');
+console.log('   POST /api/rides/calculate-price - Available');
+
+
+
+// In your rideController.js - Update the calculateRidePrice function
+exports.calculateRidePrice = async (req, res) => {
+  try {
+    console.log('💰 PRICE CALCULATION REQUEST RECEIVED:', req.body);
+    
+    const { vehicleType, distance } = req.body;
+    
+    // ✅ Extract only what we need, ignore other fields
+    if (!vehicleType || !distance) {
+      console.log('❌ Missing vehicleType or distance');
+      return res.status(400).json({
+        success: false,
+        message: 'Vehicle type and distance are required'
+      });
+    }
+
+    const distanceKm = parseFloat(distance);
+    console.log(`📏 Calculating price for ${distanceKm}km ${vehicleType}`);
+    
+    const price = await calculateRidePrice(vehicleType, distanceKm);
+    
+    console.log(`💰 CALCULATED PRICE: ₹${price} for ${distanceKm}km ${vehicleType}`);
+    
+    res.json({
+      success: true,
+      price: price,
+      vehicleType: vehicleType,
+      distance: distanceKm,
+      message: 'Price calculated successfully'
+    });
+  } catch (error) {
+    console.error('❌ Error calculating ride price:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to calculate price',
+      error: error.message
+    });
+  }
+};
+
+
 
 // GET all rides
 exports.getRides = async (req, res) => {
