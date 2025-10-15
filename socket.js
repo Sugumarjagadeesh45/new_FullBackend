@@ -1243,7 +1243,6 @@ const getIO = () => {
 
 module.exports = { init, getIO };
 
-
 // const { Server } = require("socket.io");
 // const DriverLocation = require("./models/driver/DriverLocation");
 // const Driver = require("./models/driver/driver");
